@@ -501,6 +501,28 @@ if (!session) {
     db.auth.getSession().then(({ data }) => {
       showApp(data.session);
     });
+// Transaction form: show and hide fields
+
+const assetType = document.getElementById("asset-type");
+const currencyFields = document.getElementById("currency-fields");
+const itemFields = document.getElementById("item-fields");
+
+const actorType = document.getElementById("actor-type");
+const characterField = document.getElementById("character-field");
+
+assetType.addEventListener("change", () => {
+  const isCurrency = assetType.value === "currency";
+
+  currencyFields.classList.toggle("hidden", !isCurrency);
+  itemFields.classList.toggle("hidden", isCurrency);
+});
+
+actorType.addEventListener("change", () => {
+  const isCharacter = actorType.value === "character";
+
+  characterField.classList.toggle("hidden", !isCharacter);
+});
+    
   </script>
 </body>
 </html>
