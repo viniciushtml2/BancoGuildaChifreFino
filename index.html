@@ -241,10 +241,13 @@
     </header>
 
     <nav>
-      <button class="tab active" data-tab="bank">Bank</button>
-      <button class="tab" data-tab="inventory">Inventory</button>
-      <button class="tab" data-tab="log">Log</button>
-    </nav>
+  <button class="tab active" data-tab="bank">Bank</button>
+  <button class="tab" data-tab="inventory">Inventory</button>
+  <button class="tab" data-tab="log">Log</button>
+  <button class="tab treasurer-only hidden" data-tab="transaction">
+    Transaction
+  </button>
+</nav>
 
     <main>
       <section id="bank-section">
@@ -282,6 +285,19 @@
           <p class="placeholder">The transaction history will appear here.</p>
         </div>
       </section>
+
+      <section id="transaction-section" class="hidden">
+  <h2 class="section-title">Register Transaction</h2>
+  <p class="section-description">
+    Record a deposit or withdrawal from the guild treasury.
+  </p>
+
+  <div class="panel">
+    <p class="placeholder">
+      Transaction form will be added in the next step.
+    </p>
+  </div>
+</section>
     </main>
 
     <footer>Guild Bank · Chifre Fino · Dolmenwood</footer>
@@ -348,6 +364,9 @@ if (!session) {
 
       document.getElementById("user-role").textContent =
         profile.role === "treasurer" ? "Treasurer" : "Visitor";
+      document.querySelectorAll(".treasurer-only").forEach(element => {
+  element.classList.toggle("hidden", profile.role !== "treasurer");
+});
 
       loginScreen.classList.add("hidden");
       app.classList.remove("hidden");
