@@ -325,12 +325,11 @@ async function loadBankBalance() {
     `${data.platinum_balance_pp} pp`;
 }
     async function showApp(session) {
-      if (!session) {
-        loginScreen.classList.remove("hidden");
-        app.classList.add("hidden");
-        await loadBankBalance();
-        return;
-      }
+if (!session) {
+  loginScreen.classList.remove("hidden");
+  app.classList.add("hidden");
+  return;
+}
 
       const { data: profile, error } = await db
         .from("profiles")
@@ -352,6 +351,8 @@ async function loadBankBalance() {
 
       loginScreen.classList.add("hidden");
       app.classList.remove("hidden");
+
+      await loadBankBalance();
     }
 
     document.getElementById("login-form").addEventListener("submit",
