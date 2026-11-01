@@ -250,9 +250,21 @@
       <section id="bank-section">
         <h2 class="section-title">Guild Bank</h2>
         <p class="section-description">The common treasury of the expedition.</p>
-        <div class="panel">
-          <p class="placeholder">Bank balance and transaction controls will appear here.</p>
-        </div>
+<div class="panel">
+  <h3>Common Treasury</h3>
+  <div id="common-balance" style="font-size:28px;color:var(--gold)">
+    Loading...
+  </div>
+
+  <hr style="border-color:var(--border);margin:24px 0">
+
+  <h3>Platinum Treasury</h3>
+  <div id="platinum-balance" style="font-size:28px;color:var(--gold)">
+    Loading...
+  </div>
+
+  <div id="bank-error" class="error"></div>
+</div>
       </section>
 
       <section id="inventory-section" class="hidden">
@@ -287,11 +299,36 @@
     const loginScreen = document.getElementById("login-screen");
     const app = document.getElementById("app");
     const loginError = document.getElementById("login-error");
+async function loadBankBalance() {
+  const { data, error } = await db
+    .from("bank_state")
+    .select("common_balance_bp, platinum_balance_pp")
+    .eq("id", 1)
+    .single();
 
+  if (error) {
+    document.getElementById("bank-error").textContent =
+      "Could not load bank balance: " + error.message;
+    return;
+  }
+
+  const bp = Number(data.common_balance_bp);
+
+  const gp = Math.floor(bp / 100);
+  const sp = Math.floor((bp % 100) / 10);
+  const bronze = bp % 10;
+
+  document.getElementById("common-balance").textContent =
+    `${gp} gp · ${sp} sp · ${bronze} bp`;
+
+  document.getElementById("platinum-balance").textContent =
+    `${data.platinum_balance_pp} pp`;
+}
     async function showApp(session) {
       if (!session) {
         loginScreen.classList.remove("hidden");
         app.classList.add("hidden");
+        await loadBankBalance();
         return;
       }
 
