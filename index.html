@@ -522,6 +522,119 @@ actorType.addEventListener("change", () => {
 
   characterField.classList.toggle("hidden", !isCharacter);
 });
+
+    
+// Submit transaction to Supabase
+
+const transactionForm = document.getElementById("transaction-form");
+const transactionMessage = document.getElementById("transaction-message");
+
+transactionForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const submitButton = transactionForm.querySelector(
+    'button[type="submit"]'
+  );
+
+  submitButton.disabled = true;
+  transactionMessage.textContent = "Registering transaction...";
+  transactionMessage.style.color = "";
+
+  const asset = assetType.value;
+  const action = document.getElementById("action").value;
+  const actor = actorType.value;
+
+  const characterName =
+    actor === "character"
+      ? document.getElementById("character-name").value.trim()
+      : null;
+
+  const purpose = document.getElementById("purpose").value.trim();
+
+  let result;
+
+  try {
+    if (actor === "character" && !characterName) {
+      throw new Error("Please enter the character's name.");
+    }
+
+    if (!purpose) {
+      throw new Error("Please enter the purpose of the transaction.");
+    }
+
+    if (asset === "currency") {
+      const quantity = Number(
+        document.getElementById("currency-quantity").value
+      );
+
+      if (!Number.isSafeInteger(quantity) || quantity <= 0) {
+        throw new Error("Please enter a valid currency quantity.");
+      }
+
+      result = await db.rpc("register_currency_transaction", {
+        p_action: action,
+        p_denomination: document.getElementById("denomination").value,
+        p_quantity: quantity,
+        p_actor_type: actor,
+        p_character_name: characterName,
+        p_purpose: purpose
+      });
+
+    } else {
+      const itemName =
+        document.getElementById("item-name").value.trim();
+
+      const quantity = Number(
+        document.getElementById("item-quantity").value
+      );
+
+      if (!itemName) {
+        throw new Error("Please enter an item name.");
+      }
+
+      if (!Number.isSafeInteger(quantity) || quantity <= 0) {
+        throw new Error("Please enter a valid item quantity.");
+      }
+
+      result = await db.rpc("register_item_transaction", {
+        p_action: action,
+        p_item_name: itemName,
+        p_quantity: quantity,
+        p_actor_type: actor,
+        p_character_name: characterName,
+        p_purpose: purpose,
+        p_category: document.getElementById("item-category").value,
+        p_description:
+          document.getElementById("item-description").value.trim(),
+        p_location:
+          document.getElementById("item-location").value.trim()
+      });
+    }
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    transactionMessage.textContent = "Transaction registered successfully.";
+    transactionMessage.style.color = "#8fcf8f";
+
+    transactionForm.reset();
+
+    assetType.dispatchEvent(new Event("change"));
+    actorType.dispatchEvent(new Event("change"));
+
+    await loadBankBalance();
+
+  } catch (error) {
+    transactionMessage.textContent =
+      "Error: " + error.message;
+    transactionMessage.style.color = "#e08080";
+
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
     
   </script>
 </body>
