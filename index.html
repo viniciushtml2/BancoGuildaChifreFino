@@ -292,11 +292,87 @@
     Record a deposit or withdrawal from the guild treasury.
   </p>
 
-  <div class="panel">
-    <p class="placeholder">
-      Transaction form will be added in the next step.
-    </p>
-  </div>
+ 
+<div class="panel">
+  <form id="transaction-form">
+
+    <h3>Transaction details</h3>
+
+    <label for="asset-type">Asset type</label>
+    <select id="asset-type" required>
+      <option value="currency">Currency</option>
+      <option value="item">Item</option>
+    </select>
+
+    <label for="action">Action</label>
+    <select id="action" required>
+      <option value="deposit">Deposit</option>
+      <option value="withdraw">Withdraw</option>
+    </select>
+
+    <div id="currency-fields">
+      <label for="denomination">Denomination</label>
+      <select id="denomination">
+        <option value="gp">Gold pieces (gp)</option>
+        <option value="sp">Silver pieces (sp)</option>
+        <option value="bp">Bronze pieces (bp)</option>
+        <option value="pp">Platinum pieces (pp)</option>
+      </select>
+
+      <label for="currency-quantity">Quantity</label>
+      <input id="currency-quantity" type="number" min="1" step="1">
+    </div>
+
+    <div id="item-fields" class="hidden">
+      <label for="item-name">Item name</label>
+      <input id="item-name" type="text" maxlength="100">
+
+      <label for="item-quantity">Quantity</label>
+      <input id="item-quantity" type="number" min="1" step="1">
+
+      <label for="item-category">Category</label>
+      <select id="item-category">
+        <option value="weapon">Weapon</option>
+        <option value="armor">Armor</option>
+        <option value="equipment">Equipment</option>
+        <option value="treasure">Treasure</option>
+        <option value="miscellaneous">Miscellaneous</option>
+      </select>
+
+      <label for="item-description">Description</label>
+      <input id="item-description" type="text" maxlength="500">
+
+      <label for="item-location">Location</label>
+      <input id="item-location" type="text" maxlength="150">
+    </div>
+
+    <hr style="border-color:var(--border);margin:24px 0">
+
+    <h3>Responsible party</h3>
+
+    <label for="actor-type">Who is responsible?</label>
+    <select id="actor-type" required>
+      <option value="character">Character</option>
+      <option value="expedition">Expedition</option>
+    </select>
+
+    <div id="character-field">
+      <label for="character-name">Character name</label>
+      <input id="character-name" type="text" maxlength="100">
+    </div>
+
+    <label for="purpose">Purpose / notes</label>
+    <input id="purpose" type="text" maxlength="500" required>
+
+    <button class="primary-button" type="submit">
+      Register transaction
+    </button>
+
+    <div id="transaction-message" role="status"></div>
+
+  </form>
+</div>
+
 </section>
     </main>
 
