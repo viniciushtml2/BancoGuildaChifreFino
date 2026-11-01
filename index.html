@@ -487,10 +487,10 @@ if (!session) {
           tab.classList.toggle("active", tab === button);
         });
 
-        ["bank", "inventory", "log"].forEach(name => {
-          document.getElementById(`${name}-section`)
-            .classList.toggle("hidden", name !== selected);
-        });
+     ["bank", "inventory", "log", "transaction"].forEach(name => {
+  document.getElementById(`${name}-section`)
+    .classList.toggle("hidden", name !== selected);
+});
       });
     });
 
