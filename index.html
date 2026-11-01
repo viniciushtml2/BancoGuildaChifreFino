@@ -1,0 +1,373 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guild Bank — Chifre Fino</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #151510;
+      --panel: #201f18;
+      --panel2: #29271e;
+      --border: #494332;
+      --text: #e4dcc5;
+      --muted: #a69b80;
+      --gold: #c4a66a;
+      --green: #84916c;
+      --red: #a76b5e;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Georgia, serif;
+      min-height: 100vh;
+    }
+
+    button, input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .hidden { display: none !important; }
+
+    #login-screen {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
+
+    .login-panel {
+      width: 100%;
+      max-width: 400px;
+      padding: 36px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .sigil {
+      color: var(--gold);
+      font-size: 38px;
+      margin-bottom: 12px;
+    }
+
+    h1, h2, h3 { font-weight: normal; }
+
+    .login-panel h1 {
+      color: var(--gold);
+      font-size: 27px;
+      margin: 0 0 8px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 28px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 7px 0;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      outline: none;
+    }
+
+    input:focus { border-color: var(--gold); }
+
+    .primary-button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 14px;
+      background: var(--gold);
+      color: #17150f;
+      border: none;
+      font-weight: bold;
+    }
+
+    .primary-button:hover { filter: brightness(1.1); }
+
+    .error {
+      color: #d58b7c;
+      font-size: 13px;
+      margin-top: 14px;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 22px 5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .brand h1 {
+      color: var(--gold);
+      font-size: 24px;
+      margin: 0;
+    }
+
+    .brand p {
+      color: var(--muted);
+      font-size: 12px;
+      margin: 5px 0 0;
+    }
+
+    .user-info {
+      text-align: right;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .logout {
+      color: var(--gold);
+      background: none;
+      border: none;
+      padding: 8px 0 0;
+      text-decoration: underline;
+    }
+
+    nav {
+      display: flex;
+      gap: 0;
+      padding: 0 5%;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab {
+      padding: 15px 22px;
+      color: var(--muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+    }
+
+    .tab.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 24px;
+    }
+
+    .section-title {
+      color: var(--gold);
+      font-size: 25px;
+      margin: 0 0 8px;
+    }
+
+    .section-description {
+      color: var(--muted);
+      margin: 0 0 28px;
+      font-size: 14px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .placeholder {
+      color: var(--muted);
+      font-style: italic;
+      line-height: 1.7;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 30px;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 600px) {
+      header { align-items: flex-start; }
+      .brand h1 { font-size: 19px; }
+      nav { padding: 0 12px; }
+      .tab { padding: 13px 14px; }
+      main { margin-top: 25px; }
+    }
+  </style>
+</head>
+<body>
+
+  <section id="login-screen">
+    <div class="login-panel">
+      <div class="sigil">✦</div>
+      <h1>Guild Bank</h1>
+      <div class="subtitle">CHIFRE FINO · DOLMENWOOD</div>
+
+      <form id="login-form">
+        <input id="email" type="email" placeholder="Email" required>
+        <input id="password" type="password" placeholder="Password" required>
+        <button class="primary-button" type="submit">Enter the Ledger</button>
+      </form>
+
+      <div id="login-error" class="error"></div>
+    </div>
+  </section>
+
+  <div id="app" class="hidden">
+    <header>
+      <div class="brand">
+        <h1>Guild Bank</h1>
+        <p>CHIFRE FINO · DOLMENWOOD</p>
+      </div>
+      <div class="user-info">
+        <div id="user-name"></div>
+        <div id="user-role"></div>
+        <button class="logout" id="logout-button">Log out</button>
+      </div>
+    </header>
+
+    <nav>
+      <button class="tab active" data-tab="bank">Bank</button>
+      <button class="tab" data-tab="inventory">Inventory</button>
+      <button class="tab" data-tab="log">Log</button>
+    </nav>
+
+    <main>
+      <section id="bank-section">
+        <h2 class="section-title">Guild Bank</h2>
+        <p class="section-description">The common treasury of the expedition.</p>
+        <div class="panel">
+          <p class="placeholder">Bank balance and transaction controls will appear here.</p>
+        </div>
+      </section>
+
+      <section id="inventory-section" class="hidden">
+        <h2 class="section-title">Inventory</h2>
+        <p class="section-description">Goods and equipment held by the guild.</p>
+        <div class="panel">
+          <p class="placeholder">The guild inventory will appear here.</p>
+        </div>
+      </section>
+
+      <section id="log-section" class="hidden">
+        <h2 class="section-title">Transaction Log</h2>
+        <p class="section-description">A complete record of the guild's transactions.</p>
+        <div class="panel">
+          <p class="placeholder">The transaction history will appear here.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>Guild Bank · Chifre Fino · Dolmenwood</footer>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://dloqmjlnqxlujimvsuje.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_cPoI7Dd_om7bMYYgBoz2ZA_o-K2gnSg";
+
+    const db = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+
+    const loginScreen = document.getElementById("login-screen");
+    const app = document.getElementById("app");
+    const loginError = document.getElementById("login-error");
+
+    async function showApp(session) {
+      if (!session) {
+        loginScreen.classList.remove("hidden");
+        app.classList.add("hidden");
+        return;
+      }
+
+      const { data: profile, error } = await db
+        .from("profiles")
+        .select("display_name, role")
+        .eq("id", session.user.id)
+        .single();
+
+      if (error || !profile) {
+        loginError.textContent = "Could not load your user profile.";
+        await db.auth.signOut();
+        return;
+      }
+
+      document.getElementById("user-name").textContent =
+        profile.display_name;
+
+      document.getElementById("user-role").textContent =
+        profile.role === "treasurer" ? "Treasurer" : "Visitor";
+
+      loginScreen.classList.add("hidden");
+      app.classList.remove("hidden");
+    }
+
+    document.getElementById("login-form").addEventListener("submit",
+      async (event) => {
+        event.preventDefault();
+        loginError.textContent = "";
+
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        const { data, error } = await db.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (error) {
+          loginError.textContent = error.message;
+          return;
+        }
+
+        await showApp(data.session);
+      }
+    );
+
+    document.getElementById("logout-button").addEventListener("click",
+      async () => {
+        await db.auth.signOut();
+        await showApp(null);
+      }
+    );
+
+    document.querySelectorAll(".tab").forEach(button => {
+      button.addEventListener("click", () => {
+        const selected = button.dataset.tab;
+
+        document.querySelectorAll(".tab").forEach(tab => {
+          tab.classList.toggle("active", tab === button);
+        });
+
+        ["bank", "inventory", "log"].forEach(name => {
+          document.getElementById(`${name}-section`)
+            .classList.toggle("hidden", name !== selected);
+        });
+      });
+    });
+
+    db.auth.onAuthStateChange((_event, session) => {
+      showApp(session);
+    });
+
+    db.auth.getSession().then(({ data }) => {
+      showApp(data.session);
+    });
+  </script>
+</body>
+</html>
