@@ -191,7 +191,63 @@
       font-style: italic;
       line-height: 1.7;
     }
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
 
+.modal-panel {
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--background);
+  border: 1px solid var(--border);
+  padding: 24px;
+  border-radius: 8px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 30px;
+  cursor: pointer;
+}
+
+.floating-add-button {
+  position: fixed;
+  bottom: 28px;
+  left: 28px;
+  z-index: 900;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--panel, #29251f);
+  color: inherit;
+  font-size: 32px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
+}
+
+.floating-add-button:hover {
+  filter: brightness(1.2);
+}
     footer {
       text-align: center;
       color: var(--muted);
@@ -226,18 +282,31 @@
       <div id="login-error" class="error"></div>
     </div>
   </section>
+<div id="app" class="hidden">
+  <header>
+    <div class="brand">
+      <h1>Guild Bank</h1>
+      <p>CHIFRE FINO · DOLMENWOOD</p>
+    </div>
 
-  <div id="app" class="hidden">
-    <header>
-      <div class="brand">
-        <h1>Guild Bank</h1>
-        <p>CHIFRE FINO · DOLMENWOOD</p>
-      </div>
-      <div class="user-info">
-        <div id="user-name"></div>
-        <div id="user-role"></div>
-        <button class="logout" id="logout-button">Log out</button>
-      </div>
+    <div class="user-info">
+      <div id="user-name"></div>
+      <div id="user-role"></div>
+      <button class="logout" id="logout-button">Log out</button>
+    </div>
+  </header>
+
+  <!-- Your four tab sections go here -->
+
+  <!-- Floating button -->
+  <button
+    id="add-transaction-button"
+    class="floating-add-button treasurer-only hidden"
+    type="button"
+    aria-label="Adicionar transação"
+  >
+    +
+  </button>
     </header>
 
     <nav>
@@ -842,7 +911,29 @@ async function loadCharacterBalances() {
     tbody.innerHTML = "";
   }
 }
+const addTransactionButton = document.getElementById("add-transaction-button");
+const transactionModal = document.getElementById("transaction-section");
+const closeTransactionModal = document.getElementById("close-transaction-modal");
 
+addTransactionButton.addEventListener("click", () => {
+  transactionModal.classList.remove("hidden");
+});
+
+closeTransactionModal.addEventListener("click", () => {
+  transactionModal.classList.add("hidden");
+});
+
+transactionModal.addEventListener("click", event => {
+  if (event.target === transactionModal) {
+    transactionModal.classList.add("hidden");
+  }
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") {
+    transactionModal.classList.add("hidden");
+  }
+});
   </script>
 </body>
 </html>
