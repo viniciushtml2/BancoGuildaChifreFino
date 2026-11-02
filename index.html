@@ -330,13 +330,26 @@ left: auto;
 </div>
       </section>
 
-      <section id="inventory-section" class="hidden">
-        <h2 class="section-title">Inventory</h2>
-        <p class="section-description">Goods and equipment held by the guild.</p>
-        <div class="panel">
-          <p class="placeholder">The guild inventory will appear here.</p>
-        </div>
-      </section>
+  <div class="panel">
+    <div id="inventory-error" style="color:var(--danger)"></div>
+
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;text-align:left">
+        <thead>
+          <tr>
+            <th style="padding:12px;border-bottom:1px solid var(--border)">Item</th>
+            <th style="padding:12px;border-bottom:1px solid var(--border)">Quantidade</th>
+          </tr>
+        </thead>
+        <tbody id="inventory-table-body">
+          <tr>
+            <td colspan="2" style="padding:12px">Carregando inventário...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
 
 
 <section id="log-section" class="hidden">
@@ -564,8 +577,9 @@ if (!session) {
       app.classList.remove("hidden");
      
       await loadBankBalance();
-      await loadTransactionLog();
-      await loadCharacterBalances();
+await loadTransactionLog();
+await loadCharacterBalances();
+await loadInventory();
     }
 
     document.getElementById("login-form").addEventListener("submit",
@@ -931,6 +945,61 @@ document.addEventListener("keydown", event => {
     transactionModal.classList.add("hidden");
   }
 });
+
+    
+async function loadInventory() {
+  const tbody = document.getElementById("inventory-table-body");
+  const errorBox = document.getElementById("inventory-error");
+
+  if (!tbody || !errorBox) return;
+
+  errorBox.textContent = "";
+  tbody.innerHTML = `
+    <tr><td colspan="2">Carregando inventário...</td></tr>
+  `;
+
+  try {
+    const { data, error } = await db
+      .from("inventory")
+      .select("name, quantity")
+      .order("name");
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="2" style="padding:12px">
+            Nenhum item armazenado.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = "";
+
+    data.forEach(item => {
+      const row = document.createElement("tr");
+
+      [item.name, item.quantity].forEach(value => {
+        const cell = document.createElement("td");
+        cell.textContent = value;
+        cell.style.padding = "12px";
+        cell.style.borderBottom = "1px solid var(--border)";
+        row.appendChild(cell);
+      });
+
+      tbody.appendChild(row);
+    });
+
+  } catch (error) {
+    console.error("Inventory error:", error);
+    errorBox.textContent = "Erro ao carregar inventário: " + error.message;
+    tbody.innerHTML = "";
+  }
+}
+
   </script>
 </body>
 </html>
