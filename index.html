@@ -803,21 +803,20 @@ async function loadCharacterBalances() {
     tbody.innerHTML = "";
 
     data.forEach(character => {
-      const common = Number(character.common_balance_bp);
+      const common = Number(character.common_balance_gp);
       const platinum = Number(character.platinum_balance_pp);
 
-      const sign = common < 0 ? "-" : "";
-      const absolute = Math.abs(common);
+      const commonText = `${common.toFixed(2)} gp`;
 
-      const gp = Math.floor(absolute / 100);
-      const sp = Math.floor((absolute % 100) / 10);
-      const bp = absolute % 10;
+      let status;
 
-      const commonText = `${sign}${gp} gp · ${sp} sp · ${bp} bp`;
-
-      const status = common > 0 || platinum > 0
-        ? "Guilda guarda"
-        : "Deve à guilda";
+      if (common > 0 || platinum > 0) {
+        status = "A guilda guarda";
+      } else if (common < 0 || platinum < 0) {
+        status = "Deve à guilda";
+      } else {
+        status = "Saldo zerado";
+      }
 
       const row = document.createElement("tr");
 
