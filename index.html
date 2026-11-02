@@ -278,13 +278,36 @@
         </div>
       </section>
 
-      <section id="log-section" class="hidden">
-        <h2 class="section-title">Transaction Log</h2>
-        <p class="section-description">A complete record of the guild's transactions.</p>
-        <div class="panel">
-          <p class="placeholder">The transaction history will appear here.</p>
-        </div>
-      </section>
+
+<section id="log-section" class="hidden">
+  <h2 class="section-title">Transaction Log</h2>
+  <p class="section-description">
+    A complete record of the guild's transactions.
+  </p>
+
+  <div class="panel">
+    <div id="log-error" class="error"></div>
+
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;text-align:left">
+        <thead>
+          <tr>
+            <th style="padding:12px;border-bottom:1px solid var(--border)">Date</th>
+            <th style="padding:12px;border-bottom:1px solid var(--border)">Action</th>
+            <th style="padding:12px;border-bottom:1px solid var(--border)">Amount / Item</th>
+            <th style="padding:12px;border-bottom:1px solid var(--border)">Who</th>
+          </tr>
+        </thead>
+        <tbody id="transaction-log-body">
+          <tr>
+            <td colspan="4" style="padding:12px">Loading transactions...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
 
       <section id="transaction-section" class="hidden">
   <h2 class="section-title">Register Transaction</h2>
