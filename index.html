@@ -241,12 +241,10 @@
     </header>
 
     <nav>
-  <button class="tab active" data-tab="bank">Bank</button>
-  <button class="tab" data-tab="inventory">Inventory</button>
-  <button class="tab" data-tab="log">Log</button>
-  <button class="tab treasurer-only hidden" data-tab="transaction">
-    Transaction
-  </button>
+  <button class="tab active" data-tab="bank">Banco</button>
+  <button class="tab" data-tab="characters">Saldos dos personagens</button>
+  <button class="tab" data-tab="inventory">Inventário</button>
+  <button class="tab" data-tab="log">Histórico</button>
 </nav>
 
     <main>
@@ -307,7 +305,34 @@
     </div>
   </div>
 </section>
+<section id="characters-section" class="hidden">
+  <h2 class="section-title">Saldos dos personagens</h2>
+  <p class="section-description">
+    Valores depositados pelos personagens ou devidos ao tesouro da guilda.
+  </p>
 
+  <div class="panel">
+    <div id="characters-error" class="error"></div>
+
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;text-align:left">
+        <thead>
+          <tr>
+            <th style="padding:12px;border-bottom:1px solid var(--border)">Personagem</th>
+            <th style="padding:12px;border-bottom:1px solid var(--border)">Saldo comum</th>
+            <th style="padding:12px;border-bottom:1px solid var(--border)">Saldo em pp</th>
+            <th style="padding:12px;border-bottom:1px solid var(--border)">Situação</th>
+          </tr>
+        </thead>
+        <tbody id="characters-table-body">
+          <tr>
+            <td colspan="4" style="padding:12px">Carregando saldos...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
 
       <section id="transaction-section" class="hidden">
   <h2 class="section-title">Register Transaction</h2>
@@ -511,7 +536,7 @@ if (!session) {
           tab.classList.toggle("active", tab === button);
         });
 
-     ["bank", "inventory", "log", "transaction"].forEach(name => {
+     ["bank", "characters", "inventory", "log", "transaction"].forEach(name => {
   document.getElementById(`${name}-section`)
     .classList.toggle("hidden", name !== selected);
 });
