@@ -497,6 +497,7 @@ if (!session) {
      
       await loadBankBalance();
       await loadTransactionLog();
+      await loadCharacterBalances();
     }
 
     document.getElementById("login-form").addEventListener("submit",
@@ -769,6 +770,80 @@ async function loadTransactionLog() {
 }
 
     
+async function loadCharacterBalances() {
+  const tbody = document.getElementById("characters-table-body");
+  const errorBox = document.getElementById("characters-error");
+
+  if (!tbody || !errorBox) return;
+
+  errorBox.textContent = "";
+  tbody.innerHTML = `
+    <tr><td colspan="4">Carregando saldos...</td></tr>
+  `;
+
+  try {
+    const { data, error } = await db
+      .from("character_balances")
+      .select("*")
+      .order("character_name");
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="4" style="padding:12px">
+            Nenhum saldo pendente registrado.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = "";
+
+    data.forEach(character => {
+      const common = Number(character.common_balance_bp);
+      const platinum = Number(character.platinum_balance_pp);
+
+      const sign = common < 0 ? "-" : "";
+      const absolute = Math.abs(common);
+
+      const gp = Math.floor(absolute / 100);
+      const sp = Math.floor((absolute % 100) / 10);
+      const bp = absolute % 10;
+
+      const commonText = `${sign}${gp} gp · ${sp} sp · ${bp} bp`;
+
+      const status = common > 0 || platinum > 0
+        ? "Guilda guarda"
+        : "Deve à guilda";
+
+      const row = document.createElement("tr");
+
+      [
+        character.character_name,
+        commonText,
+        `${platinum} pp`,
+        status
+      ].forEach(value => {
+        const cell = document.createElement("td");
+        cell.textContent = value;
+        cell.style.padding = "12px";
+        cell.style.borderBottom = "1px solid var(--border)";
+        row.appendChild(cell);
+      });
+
+      tbody.appendChild(row);
+    });
+
+  } catch (error) {
+    console.error("Character balances error:", error);
+    errorBox.textContent = "Erro ao carregar saldos: " + error.message;
+    tbody.innerHTML = "";
+  }
+}
+
   </script>
 </body>
 </html>
