@@ -659,6 +659,90 @@ transactionForm.addEventListener("submit", async (event) => {
   }
 });
 
+
+async function loadTransactionLog() {
+  const tbody = document.getElementById("transaction-log-body");
+  const errorBox = document.getElementById("log-error");
+
+  if (!tbody || !errorBox) {
+    console.error("Transaction log HTML elements not found.");
+    return;
+  }
+
+  errorBox.textContent = "";
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="4" style="padding:12px">Loading transactions...</td>
+    </tr>
+  `;
+
+  try {
+    const { data, error } = await db
+      .from("transactions")
+      .select(`
+        id,
+        created_at,
+        action,
+        asset_type,
+        denomination,
+        quantity,
+        item_name,
+        actor_type,
+        character_id,
+        characters(name)
+      `)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="4" style="padding:12px">
+            No transactions recorded.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = "";
+
+    data.forEach(transaction => {
+      const date = new Date(transaction.created_at).toLocaleString();
+
+      const action = transaction.action === "deposit"
+        ? "Deposit"
+        : "Withdraw";
+
+      const amount = transaction.asset_type === "currency"
+        ? `${transaction.quantity} ${transaction.denomination}`
+        : `${transaction.quantity} × ${transaction.item_name}`;
+
+      const who = transaction.actor_type === "expedition"
+        ? "Expedition"
+        : transaction.characters?.name || "Unknown";
+
+      const row = document.createElement("tr");
+
+      [date, action, amount, who].forEach(value => {
+        const cell = document.createElement("td");
+        cell.textContent = value;
+        cell.style.padding = "12px";
+        cell.style.borderBottom = "1px solid var(--border)";
+        row.appendChild(cell);
+      });
+
+      tbody.appendChild(row);
+    });
+
+  } catch (error) {
+    console.error("Transaction log error:", error);
+    errorBox.textContent = "Could not load transactions: " + error.message;
+    tbody.innerHTML = "";
+  }
+}
+
     
   </script>
 </body>
