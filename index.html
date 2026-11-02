@@ -446,8 +446,9 @@ if (!session) {
 
       loginScreen.classList.add("hidden");
       app.classList.remove("hidden");
-
+     
       await loadBankBalance();
+      await loadTransactionLog();
     }
 
     document.getElementById("login-form").addEventListener("submit",
