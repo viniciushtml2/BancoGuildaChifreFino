@@ -567,12 +567,16 @@ if (!session) {
         .eq("id", session.user.id)
         .single();
 
-      if (error || !profile) {
-        loginError.textContent = "Could not load your user profile.";
-        await db.auth.signOut();
-        return;
-      }
+  if (error || !profile) {
+  console.error("Profile loading failed:", error);
 
+  loginError.textContent =
+    "Profile error: " +
+    (error?.message || "No profile found for this user.");
+
+  await db.auth.signOut();
+  return;
+}
       document.getElementById("user-name").textContent =
         profile.display_name;
 
@@ -959,7 +963,6 @@ document.addEventListener("keydown", event => {
 
     
 async function loadInventory() {
- async function loadInventory() {
   const tbody = document.getElementById("inventory-table-body");
   const errorBox = document.getElementById("inventory-error");
 
