@@ -330,24 +330,25 @@ left: auto;
 </div>
       </section>
 
+<section id="inventory-section" class="hidden">
+  <h2 class="section-title">Inventário</h2>
+
   <div class="panel">
-    <div id="inventory-error" style="color:var(--danger)"></div>
+    <div id="inventory-error" class="error"></div>
 
     <div style="overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;text-align:left">
-       <thead>
-  <tr>
-    <th style="padding:12px;border-bottom:1px solid var(--border)">
-      Item
-    </th>
-    <th style="padding:12px;border-bottom:1px solid var(--border)">
-      Quantidade
-    </th>
-    <th style="padding:12px;border-bottom:1px solid var(--border)">
-      Armazenamento / Proprietário
-    </th>
-  </tr>
-</thead>
+        <thead>
+          <tr>
+            <th style="padding:12px;border-bottom:1px solid var(--border)">Item</th>
+            <th style="padding:12px;border-bottom:1px solid var(--border)">Quantidade</th>
+            <th style="padding:12px;border-bottom:1px solid var(--border)">Armazenamento / Proprietário</th>
+          </tr>
+        </thead>
+        <tbody id="inventory-table-body">
+          <tr>
+            <td colspan="3" style="padding:12px">Carregando inventário...</td>
+          </tr>
         </tbody>
       </table>
     </div>
