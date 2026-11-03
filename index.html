@@ -335,16 +335,19 @@ left: auto;
 
     <div style="overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;text-align:left">
-        <thead>
-          <tr>
-            <th style="padding:12px;border-bottom:1px solid var(--border)">Item</th>
-            <th style="padding:12px;border-bottom:1px solid var(--border)">Quantidade</th>
-          </tr>
-        </thead>
-        <tbody id="inventory-table-body">
-          <tr>
-            <td colspan="2" style="padding:12px">Carregando inventário...</td>
-          </tr>
+       <thead>
+  <tr>
+    <th style="padding:12px;border-bottom:1px solid var(--border)">
+      Item
+    </th>
+    <th style="padding:12px;border-bottom:1px solid var(--border)">
+      Quantidade
+    </th>
+    <th style="padding:12px;border-bottom:1px solid var(--border)">
+      Armazenamento / Proprietário
+    </th>
+  </tr>
+</thead>
         </tbody>
       </table>
     </div>
@@ -956,28 +959,45 @@ document.addEventListener("keydown", event => {
 
     
 async function loadInventory() {
+ async function loadInventory() {
   const tbody = document.getElementById("inventory-table-body");
   const errorBox = document.getElementById("inventory-error");
 
   if (!tbody || !errorBox) return;
 
   errorBox.textContent = "";
+
   tbody.innerHTML = `
-    <tr><td colspan="2">Carregando inventário...</td></tr>
+    <tr>
+      <td colspan="3">Carregando inventário...</td>
+    </tr>
   `;
 
   try {
-    const { data, error } = await db
+    const { data: inventory, error: inventoryError } = await db
       .from("inventory")
-      .select("name, quantity")
+      .select("name, quantity, storage_type, owner_character_id")
       .order("name");
 
-    if (error) throw error;
+    if (inventoryError) throw inventoryError;
 
-    if (!data || data.length === 0) {
+    const { data: characters, error: charactersError } = await db
+      .from("characters")
+      .select("id, name");
+
+    if (charactersError) throw charactersError;
+
+    const characterMap = new Map(
+      characters.map(character => [
+        character.id,
+        character.name
+      ])
+    );
+
+    if (!inventory || inventory.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="2" style="padding:12px">
+          <td colspan="3" style="padding:12px">
             Nenhum item armazenado.
           </td>
         </tr>
@@ -987,14 +1007,32 @@ async function loadInventory() {
 
     tbody.innerHTML = "";
 
-    data.forEach(item => {
+    inventory.forEach(item => {
+      let storageLabel;
+
+      if (item.storage_type === "public") {
+        storageLabel = "Guild";
+      } else if (item.storage_type === "nominal") {
+        storageLabel =
+          characterMap.get(item.owner_character_id)
+          || "Proprietário desconhecido";
+      } else {
+        storageLabel = "Não definido";
+      }
+
       const row = document.createElement("tr");
 
-      [item.name, item.quantity].forEach(value => {
+      [
+        item.name,
+        item.quantity,
+        storageLabel
+      ].forEach(value => {
         const cell = document.createElement("td");
+
         cell.textContent = value;
         cell.style.padding = "12px";
         cell.style.borderBottom = "1px solid var(--border)";
+
         row.appendChild(cell);
       });
 
@@ -1003,7 +1041,10 @@ async function loadInventory() {
 
   } catch (error) {
     console.error("Inventory error:", error);
-    errorBox.textContent = "Erro ao carregar inventário: " + error.message;
+
+    errorBox.textContent =
+      "Erro ao carregar inventário: " + error.message;
+
     tbody.innerHTML = "";
   }
 }
