@@ -470,6 +470,12 @@ left: auto;
             <option value="miscellaneous">Diversos</option>
           </select>
 
+          <label for="item-storage-type">Tipo de armazenamento</label>
+<select id="item-storage-type">
+  <option value="public">Público — disponível para a guilda</option>
+  <option value="nominal">Nominal — vinculado ao personagem</option>
+</select>
+
           <label for="item-description">Descrição</label>
           <input id="item-description" type="text" maxlength="500">
 
@@ -740,6 +746,8 @@ transactionForm.addEventListener("submit", async (event) => {
           document.getElementById("item-description").value.trim(),
         p_location:
           document.getElementById("item-location").value.trim()
+        p_storage_type:
+  document.getElementById("item-storage-type").value
       });
     }
 
