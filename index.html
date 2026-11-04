@@ -329,29 +329,27 @@ left: auto;
       <p>CHIFRE FINO · DOLMENWOOD</p>
     </div>
 
-  <div class="user-info">
-  <div id="user-name"></div>
-  <div id="user-role"></div>
+    <div class="user-info">
+      <div id="user-name"></div>
+      <div id="user-role"></div>
 
-  <button class="login-button" id="login-button" type="button">
-    Log in
-  </button>
+      <button class="login-button" id="login-button" type="button">
+        Log in
+      </button>
 
-  <button class="logout hidden" id="logout-button" type="button">
-    Log out
-  </button>
-</div>
-  <!-- Your four tab sections go here -->
-
-  <!-- Floating button -->
+      <button class="logout hidden" id="logout-button" type="button">
+        Log out
+      </button>
+    </div>
+  </header>
   <button
-    id="add-transaction-button"
-    class="floating-add-button treasurer-only hidden"
-    type="button"
-    aria-label="Adicionar transação"
-  >
-    +
-  </button>
+  id="add-transaction-button"
+  class="floating-add-button treasurer-only hidden"
+  type="button"
+  aria-label="Adicionar transação"
+>
+  +
+</button>
 
     <nav>
   <button class="tab active" data-tab="bank">Banco</button>
@@ -448,7 +446,7 @@ left: auto;
         </thead>
         <tbody id="characters-table-body">
           <tr>
-            <td colspan="4" style="padding:12px">Carregando saldos...</td>
+            <td colspan="3" style="padding:12px">Carregando saldos...</td>
           </tr>
         </tbody>
       </table>
@@ -862,9 +860,10 @@ if (!Number.isSafeInteger(quantity) || quantity <= 0) {
   throw new Error("Please enter a valid item quantity.");
 }
 
-if (isWithdrawal && quantity > Number(
-  selectedOption.textContent.match(/— (\d+) available/)?.[1]
-)) {
+if (
+  isWithdrawal &&
+  quantity > Number(selectedOption.dataset.quantity)
+) {
   throw new Error("The requested quantity exceeds the available stock.");
 }
 
@@ -889,7 +888,6 @@ result = await db.rpc("register_item_transaction", {
     : document.getElementById("item-storage-type").value,
   p_inventory_id: isWithdrawal ? selectedOption.value : null
 });
-      });
     }
 
     if (result.error) {
@@ -1343,8 +1341,9 @@ async function loadWithdrawableItems() {
       `${item.name} — ${item.quantity} available (${owner}${location})`;
 
     // Retain the exact row details for the transaction submission.
-    option.dataset.name = item.name;
-    option.dataset.category = item.category;
+  option.dataset.name = item.name;
+option.dataset.quantity = String(item.quantity);
+option.dataset.category = item.category;
     option.dataset.location = item.location || "";
     option.dataset.storageType = item.storage_type;
 
