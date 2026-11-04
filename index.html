@@ -798,8 +798,7 @@ const itemFields = document.getElementById("item-fields");
 
 const actorType = document.getElementById("actor-type");
 const characterField = document.getElementById("character-field");
-
-assetType.addEventListener("change", updateItemActionFields);
+assetType.addEventListener("change", () => {
   const isCurrency = assetType.value === "currency";
 
   currencyFields.classList.toggle("hidden", !isCurrency);
