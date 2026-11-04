@@ -476,17 +476,17 @@ left: auto;
 
         <h3>Detalhes da transação</h3>
 
-        <label for="asset-type">Tipo de ativo</label>
-        <select id="asset-type" required>
-          <option value="currency">Moeda</option>
-          <option value="item">Item</option>
-        </select>
+       <label for="asset-type">Tipo de ativo</label>
+<select id="asset-type" required>
+  <option value="currency" selected>Moeda</option>
+  <option value="item">Item</option>
+</select>
 
-        <label for="action">Ação</label>
-        <select id="action" required>
-          <option value="deposit">Depósito</option>
-          <option value="withdraw">Retirada</option>
-        </select>
+<label for="action">Ação</label>
+<select id="action" required>
+  <option value="deposit" selected>Depósito</option>
+  <option value="withdraw">Retirada</option>
+</select>
 
         <div id="currency-fields">
           <label for="denomination">Denominação</label>
@@ -497,7 +497,13 @@ left: auto;
           </select>
 
           <label for="currency-quantity">Quantidade</label>
-          <input id="currency-quantity" type="number" min="1" step="1">
+          <input
+  id="currency-quantity"
+  type="text"
+  inputmode="numeric"
+  pattern="[0-9]*"
+  autocomplete="off"
+>
         </div>
 
         <div id="item-fields" class="hidden">
@@ -514,16 +520,24 @@ left: auto;
 </div>
 
           <label for="item-quantity">Quantidade</label>
-          <input id="item-quantity" type="number" min="1" step="1">
+          <input
+  id="item-quantity"
+  type="text"
+  inputmode="numeric"
+  pattern="[0-9]*"
+  autocomplete="off"
+>
 
-          <label for="item-category">Categoria</label>
-          <select id="item-category">
-            <option value="weapon">Arma</option>
-            <option value="armor">Armadura</option>
-            <option value="equipment">Equipamento</option>
-            <option value="treasure">Tesouro</option>
-            <option value="miscellaneous">Diversos</option>
-          </select>
+        <div id="item-category-field">
+  <label for="item-category">Categoria</label>
+  <select id="item-category">
+    <option value="weapon">Arma</option>
+    <option value="armor">Armadura</option>
+    <option value="equipment">Equipamento</option>
+    <option value="treasure">Tesouro</option>
+    <option value="miscellaneous">Diversos</option>
+  </select>
+</div>
 
           <label for="item-storage-type">Tipo de armazenamento</label>
 <select id="item-storage-type">
@@ -534,8 +548,10 @@ left: auto;
           <label for="item-description">Descrição</label>
           <input id="item-description" type="text" maxlength="500">
 
-          <label for="item-location">Localização</label>
-          <input id="item-location" type="text" maxlength="150">
+        <div id="item-location-field">
+  <label for="item-location">Localização</label>
+  <input id="item-location" type="text" maxlength="150">
+</div>
         </div>
 
         <hr style="border-color:var(--border);margin:24px 0">
@@ -807,10 +823,16 @@ async function updateItemActionFields() {
   itemDepositName.classList.toggle("hidden", isWithdrawal);
   itemWithdrawName.classList.toggle("hidden", !isWithdrawal);
 
+  document.getElementById("item-category-field")
+    .classList.toggle("hidden", isWithdrawal);
+
+  document.getElementById("item-location-field")
+    .classList.toggle("hidden", isWithdrawal);
+
   document.getElementById("item-name").required = !isWithdrawal;
   withdrawItemSelect.required = isWithdrawal;
 
-  if (isWithdrawal) {
+  if (isWithdrawal && assetType.value === "item") {
     await loadWithdrawableItems();
   }
 }
@@ -820,7 +842,16 @@ actionSelect.addEventListener("change", updateItemActionFields);
 
 const transactionForm = document.getElementById("transaction-form");
 const transactionMessage = document.getElementById("transaction-message");
+// Allow digits only in quantity fields.
 
+document.querySelectorAll(
+  "#currency-quantity, #item-quantity"
+).forEach(input => {
+  input.addEventListener("input", () => {
+    input.value = input.value.replace(/[^0-9]/g, "");
+  });
+});
+    
 transactionForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
