@@ -617,6 +617,38 @@ left: auto;
     const loginScreen = document.getElementById("login-screen");
     const app = document.getElementById("app");
     const loginError = document.getElementById("login-error");
+    // Tab navigation
+
+const tabButtons = document.querySelectorAll(".tab");
+
+const tabSections = {
+  bank: document.getElementById("bank-section"),
+  characters: document.getElementById("characters-section"),
+  inventory: document.getElementById("inventory-section"),
+  log: document.getElementById("log-section")
+};
+
+tabButtons.forEach(button => {
+  button.addEventListener("click", () => {
+    const selectedTab = button.dataset.tab;
+
+    // Hide every section.
+    Object.values(tabSections).forEach(section => {
+      section.classList.add("hidden");
+    });
+
+    // Show the selected section.
+    tabSections[selectedTab].classList.remove("hidden");
+
+    // Update the active tab.
+    tabButtons.forEach(tab => {
+      tab.classList.remove("active");
+    });
+
+    button.classList.add("active");
+  });
+});
+    
 async function loadBankBalance() {
   const { data, error } = await db
     .from("bank_state")
@@ -754,8 +786,10 @@ assetType.addEventListener("change", () => {
 
   currencyFields.classList.toggle("hidden", !isCurrency);
   itemFields.classList.toggle("hidden", isCurrency);
-});
 
+  // Synchronize the item fields with the selected action.
+  updateItemActionFields();
+});
 actorType.addEventListener("change", () => {
   const isCharacter = actorType.value === "character";
 
@@ -1092,8 +1126,12 @@ const closeTransactionModal = document.getElementById("close-transaction-modal")
 
 addTransactionButton.addEventListener("click", () => {
   transactionModal.classList.remove("hidden");
-});
 
+  // Synchronize all fields with their current selections.
+  assetType.dispatchEvent(new Event("change"));
+  actionSelect.dispatchEvent(new Event("change"));
+  actorType.dispatchEvent(new Event("change"));
+});
 closeTransactionModal.addEventListener("click", () => {
   transactionModal.classList.add("hidden");
 });
