@@ -264,25 +264,64 @@ left: auto;
       .tab { padding: 13px 14px; }
       main { margin-top: 25px; }
     }
+
+#login-screen {
+  min-height: 0;
+}
+
+#login-screen .login-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  text-align: center;
+}
+
+#login-screen .modal-header {
+  margin-top: -16px;
+}
+
+.login-button {
+  color: var(--gold);
+  background: none;
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+}
+
+.character-link {
+  color: var(--gold);
+  background: none;
+  border: none;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.character-link:hover {
+  color: var(--text);
+}
   </style>
 </head>
 <body>
 
-  <section id="login-screen">
-    <div class="login-panel">
-      <div class="sigil">✦</div>
-      <h1>Guild Bank</h1>
-      <div class="subtitle">CHIFRE FINO · DOLMENWOOD</div>
-
-      <form id="login-form">
-        <input id="email" type="email" placeholder="Email" required>
-        <input id="password" type="password" placeholder="Password" required>
-        <button class="primary-button" type="submit">Enter the Ledger</button>
-      </form>
-
-      <div id="login-error" class="error"></div>
+<section id="login-screen" class="modal-overlay hidden">
+  <div class="login-panel">
+    <div class="modal-header">
+      <div></div>
+      <button id="close-login-modal" class="modal-close" type="button">×</button>
     </div>
-  </section>
+
+    <div class="sigil">✦</div>
+    <h1>Guild Bank</h1>
+    <div class="subtitle">CHIFRE FINO · DOLMENWOOD</div>
+
+    <form id="login-form">
+      <input id="email" type="email" placeholder="Email" required>
+      <input id="password" type="password" placeholder="Password" required>
+      <button class="primary-button" type="submit">Enter the Ledger</button>
+    </form>
+
+    <div id="login-error" class="error"></div>
+  </div>
+</section>
 <div id="app" class="hidden">
   <header>
     <div class="brand">
@@ -290,13 +329,18 @@ left: auto;
       <p>CHIFRE FINO · DOLMENWOOD</p>
     </div>
 
-    <div class="user-info">
-      <div id="user-name"></div>
-      <div id="user-role"></div>
-      <button class="logout" id="logout-button">Log out</button>
-    </div>
-  </header>
+  <div class="user-info">
+  <div id="user-name"></div>
+  <div id="user-role"></div>
 
+  <button class="login-button" id="login-button" type="button">
+    Log in
+  </button>
+
+  <button class="logout hidden" id="logout-button" type="button">
+    Log out
+  </button>
+</div>
   <!-- Your four tab sections go here -->
 
   <!-- Floating button -->
@@ -459,8 +503,17 @@ left: auto;
         </div>
 
         <div id="item-fields" class="hidden">
-          <label for="item-name">Nome do item</label>
-          <input id="item-name" type="text" maxlength="100">
+        <div id="item-deposit-name">
+  <label for="item-name">Nome do item</label>
+  <input id="item-name" type="text" maxlength="100">
+</div>
+
+<div id="item-withdraw-name" class="hidden">
+  <label for="withdraw-item-select">Item armazenado</label>
+  <select id="withdraw-item-select">
+    <option value="">Carregando itens...</option>
+  </select>
+</div>
 
           <label for="item-quantity">Quantidade</label>
           <input id="item-quantity" type="number" min="1" step="1">
@@ -515,6 +568,40 @@ left: auto;
     </div>
   </div>
 </div>
+
+      <div id="character-history-modal" class="modal-overlay hidden">
+  <div class="modal-panel">
+    <div class="modal-header">
+      <h2 class="section-title" id="character-history-title">
+        Character history
+      </h2>
+      <button
+        id="close-character-history"
+        class="modal-close"
+        type="button"
+      >×</button>
+    </div>
+
+    <p class="section-description">
+      Transactions involving this character.
+    </p>
+
+    <div id="character-history-error" class="error"></div>
+
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;text-align:left">
+        <thead>
+          <tr>
+            <th style="padding:12px;border-bottom:1px solid var(--border)">Date</th>
+            <th style="padding:12px;border-bottom:1px solid var(--border)">Action</th>
+            <th style="padding:12px;border-bottom:1px solid var(--border)">Amount / Item</th>
+          </tr>
+        </thead>
+        <tbody id="character-history-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
     </main>
 
     <footer>Guild Bank · Chifre Fino · Dolmenwood</footer>
@@ -555,98 +642,106 @@ async function loadBankBalance() {
     `${gp} gp · ${sp} sp · ${bronze} bp`;
 
 }
-    async function showApp(session) {
-if (!session) {
-  loginScreen.classList.remove("hidden");
-  app.classList.add("hidden");
-  return;
-}
+async function showApp(session) {
+  app.classList.remove("hidden");
+  loginScreen.classList.add("hidden");
 
-      const { data: profile, error } = await db
-        .from("profiles")
-        .select("display_name, role")
-        .eq("id", session.user.id)
-        .single();
+  const loginButton = document.getElementById("login-button");
+  const logoutButton = document.getElementById("logout-button");
+  const userName = document.getElementById("user-name");
+  const userRole = document.getElementById("user-role");
 
-  if (error || !profile) {
-  console.error("Profile loading failed:", error);
+  // Default state: public visitor.
+  userName.textContent = "";
+  userRole.textContent = "Public access";
+  loginButton.classList.remove("hidden");
+  logoutButton.classList.add("hidden");
 
-  loginError.textContent =
-    "Profile error: " +
-    (error?.message || "No profile found for this user.");
+  document.querySelectorAll(".treasurer-only").forEach(element => {
+    element.classList.add("hidden");
+  });
 
-  await db.auth.signOut();
-  return;
-}
-      document.getElementById("user-name").textContent =
-        profile.display_name;
+  if (session) {
+    const { data: profile, error } = await db
+      .from("profiles")
+      .select("display_name, role")
+      .eq("id", session.user.id)
+      .single();
 
-      document.getElementById("user-role").textContent =
-        profile.role === "treasurer" ? "Treasurer" : "Visitor";
-      document.querySelectorAll(".treasurer-only").forEach(element => {
-  element.classList.toggle("hidden", profile.role !== "treasurer");
-});
+    if (error || !profile) {
+      console.error("Profile loading failed:", error);
+      loginError.textContent =
+        "Profile error: " + (error?.message || "No profile found.");
 
-      loginScreen.classList.add("hidden");
-      app.classList.remove("hidden");
-     
-      await loadBankBalance();
-await loadTransactionLog();
-await loadCharacterBalances();
-await loadInventory();
+      await db.auth.signOut();
+      return;
     }
 
-    document.getElementById("login-form").addEventListener("submit",
-      async (event) => {
-        event.preventDefault();
-        loginError.textContent = "";
+    userName.textContent = profile.display_name;
+    userRole.textContent =
+      profile.role === "treasurer" ? "Treasurer" : "Visitor";
 
-        const email = document.getElementById("email").value;
-        const password = document.getElementById("password").value;
+    loginButton.classList.add("hidden");
+    logoutButton.classList.remove("hidden");
 
-        const { data, error } = await db.auth.signInWithPassword({
-          email,
-          password
-        });
-
-        if (error) {
-          loginError.textContent = error.message;
-          return;
-        }
-
-        await showApp(data.session);
-      }
-    );
-
-    document.getElementById("logout-button").addEventListener("click",
-      async () => {
-        await db.auth.signOut();
-        await showApp(null);
-      }
-    );
-
-    document.querySelectorAll(".tab").forEach(button => {
-      button.addEventListener("click", () => {
-        const selected = button.dataset.tab;
-
-        document.querySelectorAll(".tab").forEach(tab => {
-          tab.classList.toggle("active", tab === button);
-        });
-
-     ["bank", "characters", "inventory", "log"].forEach(name => {
-  document.getElementById(`${name}-section`)
-    .classList.toggle("hidden", name !== selected);
-});
+    if (profile.role === "treasurer") {
+      document.querySelectorAll(".treasurer-only").forEach(element => {
+        element.classList.remove("hidden");
       });
-    });
+    }
+  }
 
-    db.auth.onAuthStateChange((_event, session) => {
-      showApp(session);
-    });
+  await Promise.all([
+    loadBankBalance(),
+    loadTransactionLog(),
+    loadCharacterBalances(),
+    loadInventory()
+  ]);
+}
+document.getElementById("login-button").addEventListener("click", () => {
+  loginError.textContent = "";
+  loginScreen.classList.remove("hidden");
+});
 
-    db.auth.getSession().then(({ data }) => {
-      showApp(data.session);
-    });
+document.getElementById("close-login-modal").addEventListener("click", () => {
+  loginScreen.classList.add("hidden");
+});
+
+loginScreen.addEventListener("click", event => {
+  if (event.target === loginScreen) {
+    loginScreen.classList.add("hidden");
+  }
+});
+
+document.getElementById("login-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  loginError.textContent = "";
+
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const { error } = await db.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    loginError.textContent = error.message;
+    return;
+  }
+
+  loginScreen.classList.add("hidden");
+});
+
+document.getElementById("logout-button").addEventListener("click", async () => {
+  await db.auth.signOut();
+});
+
+db.auth.onAuthStateChange((_event, session) => {
+  // Avoid awaiting Supabase calls inside this callback.
+  setTimeout(() => showApp(session), 0);
+});
+
+db.auth.getSession().then(({ data }) => {
+  showApp(data.session);
+});
 // Transaction form: show and hide fields
 
 const assetType = document.getElementById("asset-type");
@@ -669,7 +764,26 @@ actorType.addEventListener("change", () => {
   characterField.classList.toggle("hidden", !isCharacter);
 });
 
-    
+const actionSelect = document.getElementById("action");
+const itemDepositName = document.getElementById("item-deposit-name");
+const itemWithdrawName = document.getElementById("item-withdraw-name");
+const withdrawItemSelect = document.getElementById("withdraw-item-select");
+
+async function updateItemActionFields() {
+  const isWithdrawal = actionSelect.value === "withdraw";
+
+  itemDepositName.classList.toggle("hidden", isWithdrawal);
+  itemWithdrawName.classList.toggle("hidden", !isWithdrawal);
+
+  document.getElementById("item-name").required = !isWithdrawal;
+  withdrawItemSelect.required = isWithdrawal;
+
+  if (isWithdrawal) {
+    await loadWithdrawableItems();
+  }
+}
+
+actionSelect.addEventListener("change", updateItemActionFields);    
 // Submit transaction to Supabase
 
 const transactionForm = document.getElementById("transaction-form");
@@ -727,35 +841,54 @@ transactionForm.addEventListener("submit", async (event) => {
       });
 
     } else {
-      const itemName =
-        document.getElementById("item-name").value.trim();
+        const isWithdrawal = action === "withdraw";
+const selectedOption = withdrawItemSelect.selectedOptions[0];
 
-      const quantity = Number(
-        document.getElementById("item-quantity").value
-      );
+const itemName = isWithdrawal
+  ? selectedOption?.dataset.name
+  : document.getElementById("item-name").value.trim();
 
-      if (!itemName) {
-        throw new Error("Please enter an item name.");
-      }
+const quantity = Number(
+  document.getElementById("item-quantity").value
+);
 
-      if (!Number.isSafeInteger(quantity) || quantity <= 0) {
-        throw new Error("Please enter a valid item quantity.");
-      }
+if (!itemName) {
+  throw new Error(
+    isWithdrawal ? "Please select an item." : "Please enter an item name."
+  );
+}
 
-      result = await db.rpc("register_item_transaction", {
-        p_action: action,
-        p_item_name: itemName,
-        p_quantity: quantity,
-        p_actor_type: actor,
-        p_character_name: characterName,
-        p_purpose: purpose,
-        p_category: document.getElementById("item-category").value,
-        p_description:
-          document.getElementById("item-description").value.trim(),
-p_location:
-  document.getElementById("item-location").value,
-p_storage_type:
-  document.getElementById("item-storage-type").value
+if (!Number.isSafeInteger(quantity) || quantity <= 0) {
+  throw new Error("Please enter a valid item quantity.");
+}
+
+if (isWithdrawal && quantity > Number(
+  selectedOption.textContent.match(/— (\d+) available/)?.[1]
+)) {
+  throw new Error("The requested quantity exceeds the available stock.");
+}
+
+result = await db.rpc("register_item_transaction", {
+  p_action: action,
+  p_item_name: itemName,
+  p_quantity: quantity,
+  p_actor_type: actor,
+  p_character_name: characterName,
+  p_purpose: purpose,
+  p_category: isWithdrawal
+    ? selectedOption.dataset.category
+    : document.getElementById("item-category").value,
+  p_description: isWithdrawal
+    ? null
+    : document.getElementById("item-description").value.trim(),
+  p_location: isWithdrawal
+    ? selectedOption.dataset.location
+    : document.getElementById("item-location").value.trim(),
+  p_storage_type: isWithdrawal
+    ? selectedOption.dataset.storageType
+    : document.getElementById("item-storage-type").value,
+  p_inventory_id: isWithdrawal ? selectedOption.value : null
+});
       });
     }
 
@@ -766,13 +899,18 @@ p_storage_type:
     transactionMessage.textContent = "Transaction registered successfully.";
     transactionMessage.style.color = "#8fcf8f";
 
-    transactionForm.reset();
+transactionForm.reset();
 
-    assetType.dispatchEvent(new Event("change"));
-    actorType.dispatchEvent(new Event("change"));
+assetType.dispatchEvent(new Event("change"));
+actorType.dispatchEvent(new Event("change"));
+actionSelect.dispatchEvent(new Event("change"));
 
-    await loadBankBalance();
-
+await Promise.all([
+  loadBankBalance(),
+  loadTransactionLog(),
+  loadCharacterBalances(),
+  loadInventory()
+]);
   } catch (error) {
     transactionMessage.textContent =
       "Error: " + error.message;
@@ -917,17 +1055,29 @@ async function loadCharacterBalances() {
 
       const row = document.createElement("tr");
 
-      [
-        character.character_name,
-        commonText,
-        status
-      ].forEach(value => {
-        const cell = document.createElement("td");
-        cell.textContent = value;
-        cell.style.padding = "12px";
-        cell.style.borderBottom = "1px solid var(--border)";
-        row.appendChild(cell);
-      });
+   const nameCell = document.createElement("td");
+const nameButton = document.createElement("button");
+
+nameButton.type = "button";
+nameButton.className = "character-link";
+nameButton.textContent = character.character_name;
+nameButton.addEventListener("click", () => {
+  loadCharacterHistory(
+    character.character_id,
+    character.character_name
+  );
+});
+
+nameCell.appendChild(nameButton);
+row.appendChild(nameCell);
+
+[commonText, status].forEach(value => {
+  const cell = document.createElement("td");
+  cell.textContent = value;
+  cell.style.padding = "12px";
+  cell.style.borderBottom = "1px solid var(--border)";
+  row.appendChild(cell);
+});
 
       tbody.appendChild(row);
     });
@@ -962,6 +1112,74 @@ document.addEventListener("keydown", event => {
   }
 });
 
+    async function loadCharacterHistory(characterId, characterName) {
+  const modal = document.getElementById("character-history-modal");
+  const tbody = document.getElementById("character-history-body");
+  const errorBox = document.getElementById("character-history-error");
+
+  document.getElementById("character-history-title").textContent =
+    characterName;
+
+  errorBox.textContent = "";
+  tbody.innerHTML = `
+    <tr><td colspan="3" style="padding:12px">Loading history...</td></tr>
+  `;
+
+  modal.classList.remove("hidden");
+
+  const { data, error } = await db
+    .from("transactions")
+    .select(`
+      created_at,
+      action,
+      asset_type,
+      denomination,
+      quantity,
+      item_name
+    `)
+    .eq("character_id", characterId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    errorBox.textContent = "Could not load history: " + error.message;
+    tbody.innerHTML = "";
+    return;
+  }
+
+  tbody.innerHTML = "";
+
+  if (!data || data.length === 0) {
+    tbody.innerHTML = `
+      <tr><td colspan="3" style="padding:12px">No transactions found.</td></tr>
+    `;
+    return;
+  }
+
+  data.forEach(transaction => {
+    const date = new Date(transaction.created_at).toLocaleString();
+    const action = transaction.action === "deposit" ? "Deposit" : "Withdraw";
+
+    const amount = transaction.asset_type === "currency"
+      ? `${transaction.quantity} ${transaction.denomination}`
+      : `${transaction.quantity} × ${transaction.item_name}`;
+
+    const row = document.createElement("tr");
+
+    [date, action, amount].forEach(value => {
+      const cell = document.createElement("td");
+      cell.textContent = value;
+      cell.style.padding = "12px";
+      cell.style.borderBottom = "1px solid var(--border)";
+      row.appendChild(cell);
+    });
+
+    tbody.appendChild(row);
+  });
+}
+
+document.getElementById("close-character-history").addEventListener("click", () => {
+  document.getElementById("character-history-modal").classList.add("hidden");
+});
     
 async function loadInventory() {
   const tbody = document.getElementById("inventory-table-body");
@@ -980,9 +1198,18 @@ async function loadInventory() {
   try {
     const { data: inventory, error: inventoryError } = await db
       .from("inventory")
-      .select("name, quantity, storage_type, owner_character_id")
-      .order("name");
-
+      .select(`
+  id,
+  name,
+  quantity,
+  category,
+  location,
+  status,
+  storage_type,
+  owner_character_id
+`)
+.eq("status", "available")
+.order("name");
     if (inventoryError) throw inventoryError;
 
     const { data: characters, error: charactersError } = await db
@@ -1052,7 +1279,78 @@ async function loadInventory() {
     tbody.innerHTML = "";
   }
 }
+async function loadWithdrawableItems() {
+  withdrawItemSelect.innerHTML =
+    '<option value="">Loading items...</option>';
 
+  const { data, error } = await db
+    .from("inventory")
+    .select(`
+      id,
+      name,
+      quantity,
+      category,
+      location,
+      storage_type,
+      owner_character_id
+    `)
+    .eq("status", "available")
+    .gt("quantity", 0)
+    .order("name");
+
+  if (error) {
+    withdrawItemSelect.innerHTML =
+      '<option value="">Could not load items</option>';
+    console.error("Withdrawable items error:", error);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    withdrawItemSelect.innerHTML =
+      '<option value="">No items available</option>';
+    return;
+  }
+
+  const { data: characters, error: characterError } = await db
+    .from("characters")
+    .select("id, name");
+
+  if (characterError) {
+    withdrawItemSelect.innerHTML =
+      '<option value="">Could not load owners</option>';
+    return;
+  }
+
+  const characterMap = new Map(
+    characters.map(character => [character.id, character.name])
+  );
+
+  withdrawItemSelect.innerHTML =
+    '<option value="">Select an item</option>';
+
+  data.forEach(item => {
+    const owner = item.storage_type === "nominal"
+      ? characterMap.get(item.owner_character_id) || "Unknown owner"
+      : "Guild";
+
+    const location = item.location ? ` · ${item.location}` : "";
+
+    const option = document.createElement("option");
+
+    // Keep the inventory row ID as the selected value.
+    option.value = item.id;
+    option.textContent =
+      `${item.name} — ${item.quantity} available (${owner}${location})`;
+
+    // Retain the exact row details for the transaction submission.
+    option.dataset.name = item.name;
+    option.dataset.category = item.category;
+    option.dataset.location = item.location || "";
+    option.dataset.storageType = item.storage_type;
+
+    withdrawItemSelect.appendChild(option);
+  });
+}
   </script>
 </body>
 </html>
