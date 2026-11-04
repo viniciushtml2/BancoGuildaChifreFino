@@ -539,7 +539,7 @@ left: auto;
   </select>
 </div>
 
-          <label for="item-storage-type">Tipo de armazenamento</label>
+          <label for="">Tipo de armazenamento</label>
 <select id="item-storage-type">
   <option value="public">Público — disponível para a guilda</option>
   <option value="nominal">Nominal — vinculado ao personagem</option>
@@ -827,6 +827,9 @@ async function updateItemActionFields() {
     .classList.toggle("hidden", isWithdrawal);
 
   document.getElementById("item-location-field")
+    .classList.toggle("hidden", isWithdrawal);
+
+  document.getElementById("item-storage-type-field")
     .classList.toggle("hidden", isWithdrawal);
 
   document.getElementById("item-name").required = !isWithdrawal;
