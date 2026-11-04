@@ -799,7 +799,7 @@ const itemFields = document.getElementById("item-fields");
 const actorType = document.getElementById("actor-type");
 const characterField = document.getElementById("character-field");
 
-assetType.addEventListener("change", () => {
+assetType.addEventListener("change", updateItemActionFields);
   const isCurrency = assetType.value === "currency";
 
   currencyFields.classList.toggle("hidden", !isCurrency);
@@ -837,15 +837,20 @@ async function updateItemActionFields() {
   document.getElementById("item-description-field")
     .classList.toggle("hidden", isWithdrawal);
 
-  document.getElementById("item-name").required = !isWithdrawal;
-  withdrawItemSelect.required = isWithdrawal;
+const isItem = assetType.value === "item";
+
+document.getElementById("item-name").required =
+  isItem && !isWithdrawal;
+
+withdrawItemSelect.required =
+  isItem && isWithdrawal;
 
   if (isWithdrawal && assetType.value === "item") {
     await loadWithdrawableItems();
   }
 }
 
-actionSelect.addEventListener("change", updateItemActionFields);    
+actionSelect.addEventListener("change", updateItemActionFields);   
 // Submit transaction to Supabase
 
 const transactionForm = document.getElementById("transaction-form");
